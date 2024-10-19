@@ -17,11 +17,11 @@ As I've setted up Ollama and open-webui on my homelab, this is just a simple scr
 ## Running with docker
 ```
 docker run \
-    -e WHATSAPP_URL=http://10.11.12.210:8700 \
-    -e WHATSAPP_SESSION=DISC_WPP_SESSION \
-    -e WHATSAPP_CHAT_ID=120363331680556760@g.us \
-    -e WHATSAPP_NUMBER_ID=5512982738814@c.us \
-    -e OLLAMA_URL=http://10.11.12.210:9300 \
+    -e WHATSAPP_URL=http://localhost \
+    -e WHATSAPP_SESSION=ABC \
+    -e WHATSAPP_CHAT_ID=12345678@g.us \
+    -e WHATSAPP_NUMBER_ID=12345678@c.us \
+    -e OLLAMA_URL=http://localhost \
     -e LOG_LEVEL=INFO \
     -e OLLAMA_MODEL=llama3.2:1b
     -e OLLAMA_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xyzxyzxyz \ 
