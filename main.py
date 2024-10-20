@@ -20,15 +20,17 @@ last_prompt = ""
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
+
 def spinner_loading(message, stop_event):
-    spinner = ['|', '/', '-', '\\']
+    spinner = ["|", "/", "-", "\\"]
     idx = 0
     while not stop_event.is_set():
-        sys.stdout.write(f'\r{message} {spinner[idx % len(spinner)]}')
+        sys.stdout.write(f"\r{message} {spinner[idx % len(spinner)]}")
         sys.stdout.flush()
         time.sleep(0.1)
         idx += 1
-    sys.stdout.write('\r' + ' ' * (len(message) + 2) + '\r')
+    sys.stdout.write("\r" + " " * (len(message) + 2) + "\r")
+
 
 def check_messages():
     global last_prompt
@@ -72,12 +74,17 @@ def check_messages():
 def ask_ollama(prompt):
     logging.info("Asking Ollama")
     stop_event = threading.Event()
-    spinner_thread = threading.Thread(target=spinner_loading, args=("Loading...", stop_event))
+    spinner_thread = threading.Thread(
+        target=spinner_loading, args=("Loading...", stop_event)
+    )
     spinner_thread.start()
     url = f"{os.environ['OLLAMA_URL']}/api/chat/completions"
 
     payload = json.dumps(
-        {"model": f"{os.environ['OLLAMA_MODEL']}", "messages": [{"role": "user", "content": f"{prompt}"}]}
+        {
+            "model": f"{os.environ['OLLAMA_MODEL']}",
+            "messages": [{"role": "user", "content": f"{prompt}"}],
+        }
     )
     headers = {
         "Authorization": f"Bearer {os.environ['OLLAMA_TOKEN']}",
