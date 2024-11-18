@@ -16,6 +16,8 @@ logging.basicConfig(
 )
 
 global last_prompt
+global last_prompt_message_id
+last_prompt_message_id = ""
 last_prompt = ""
 
 scheduler = sched.scheduler(time.time, time.sleep)
@@ -34,6 +36,7 @@ def spinner_loading(message, stop_event):
 
 def check_messages():
     global last_prompt
+    global last_prompt_message_id
 
     logging.info("Looking for new prompt")
     url = f"{os.environ['WHATSAPP_URL']}/chat/fetchMessages/{os.environ['WHATSAPP_SESSION']}"
@@ -51,6 +54,7 @@ def check_messages():
     logging.debug(response.text)
 
     if data.get("messages"):
+        last_prompt_message_id = data["messages"][-1]["id"]["id"]
         last_message = data["messages"][-1]["body"]
         last_message_from = data["messages"][-1]["from"]
         if (
@@ -117,11 +121,12 @@ def send_typing_state():
 
 def send_wpp_msg(msg):
     logging.info("Sending whatsapp message")
-    url = f"{os.environ['WHATSAPP_URL']}/client/sendMessage/{os.environ['WHATSAPP_SESSION']}"
+    url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
     payload = json.dumps(
         {
             "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
+            "messageId": f"{last_prompt_message_id}",
             "contentType": "string",
             "content": f"{msg}",
         }
