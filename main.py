@@ -16,12 +16,14 @@ logging.basicConfig(
 global last_prompt
 global last_prompt_message_id
 global last_message_from
-global last_message_user
+global last_message_user_num
+global last_message_user_name
 
 last_prompt_message_id = ""
 last_prompt = ""
 last_message_from = ""
-last_message_user = ""
+last_message_user_num = ""
+last_message_user_name = ""
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
@@ -41,7 +43,8 @@ def check_messages():
     global last_prompt
     global last_prompt_message_id
     global last_message_from
-    global last_message_user
+    global last_message_user_num
+    global last_message_user_name
 
     logging.info("Looking for new prompt")
     url = f"{os.environ['WHATSAPP_URL']}/chat/fetchMessages/{os.environ['WHATSAPP_SESSION']}"
@@ -60,7 +63,16 @@ def check_messages():
         last_prompt_message_id = data["messages"][-1]["id"]["id"]
         last_message = data["messages"][-1]["body"]
         last_message_from = data["messages"][-1]["from"]
-        last_message_user = data['messages'][0]['_data']['id'].get('author', {}).get('_serialized', None)
+
+        last_message_user_name = data.get('messages', [{}])[-1].get('_data', {}).get('notifyName')
+
+        participant = data.get('messages', [{}])[-1].get('_data', {}).get('id', {}).get('participant')
+        last_message_user_num = (
+            participant.get('_serialized')
+            if isinstance(participant, dict)
+            else participant
+        )
+
         if (
             last_message == last_prompt
             or last_message_from == os.environ["WHATSAPP_NUMBER_ID"]
@@ -68,7 +80,7 @@ def check_messages():
             logging.info("No new prompts")
         else:
             logging.info(f"Prompt: {last_message}")
-            logging.info(f"Requester: {last_message_from}")
+            logging.info(f"Requester: {last_message_user_name} - {last_message_user_num}")
             send_typing_state()
             ask_ollama(last_message)
             last_prompt = last_message
@@ -123,13 +135,10 @@ def send_typing_state():
 
 
 def send_wpp_msg(msg):
-    global last_message_user
-
-    logging.info(f"Sending whatsapp message tagging {last_message_user}")
+    logging.info(f"Sending whatsapp message tagging {last_message_user_num}")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
-    # Adiciona o @user simbólico na frente da mensagem
-    mention_placeholder = "@user"
+    mention_placeholder = f"@{last_message_user_name}" # EX: last_message_user_name=Lucas
     content_with_mention = f"{mention_placeholder} {msg}"
 
     payload = json.dumps({
@@ -137,8 +146,9 @@ def send_wpp_msg(msg):
         "messageId": f"{last_prompt_message_id}",
         "contentType": "string",
         "content": content_with_mention,
-        "mentions": [last_message_user],  # Ex: "5511999999999@c.us"
+        "mentions": [last_message_user_num],  # Ex: last_message_user_num=5511999999999@c.us
     })
+    print(payload)
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
     response = requests.request(
