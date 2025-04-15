@@ -48,9 +48,11 @@ def check_messages():
 
     logging.info("Looking for new prompt")
     url = f"{os.environ['WHATSAPP_URL']}/chat/fetchMessages/{os.environ['WHATSAPP_SESSION']}"
-    payload = json.dumps({
-        "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
-    })
+    payload = json.dumps(
+        {
+            "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
+        }
+    )
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
     response = requests.request(
@@ -64,11 +66,18 @@ def check_messages():
         last_message = data["messages"][-1]["body"]
         last_message_from = data["messages"][-1]["from"]
 
-        last_message_user_name = data.get('messages', [{}])[-1].get('_data', {}).get('notifyName')
+        last_message_user_name = (
+            data.get("messages", [{}])[-1].get("_data", {}).get("notifyName")
+        )
 
-        participant = data.get('messages', [{}])[-1].get('_data', {}).get('id', {}).get('participant')
+        participant = (
+            data.get("messages", [{}])[-1]
+            .get("_data", {})
+            .get("id", {})
+            .get("participant")
+        )
         last_message_user_num = (
-            participant.get('_serialized')
+            participant.get("_serialized")
             if isinstance(participant, dict)
             else participant
         )
@@ -80,7 +89,9 @@ def check_messages():
             logging.info("No new prompts")
         else:
             logging.info(f"Prompt: {last_message}")
-            logging.info(f"Requester: {last_message_user_name} - {last_message_user_num}")
+            logging.info(
+                f"Requester: {last_message_user_name} - {last_message_user_num}"
+            )
             send_typing_state()
             ask_ollama(last_message)
             last_prompt = last_message
@@ -101,10 +112,12 @@ def ask_ollama(prompt):
     spinner_thread.start()
     url = f"{os.environ['OLLAMA_URL']}/api/chat/completions"
 
-    payload = json.dumps({
-        "model": f"{os.environ['OLLAMA_MODEL']}",
-        "messages": [{"role": "user", "content": f"{prompt}"}],
-    })
+    payload = json.dumps(
+        {
+            "model": f"{os.environ['OLLAMA_MODEL']}",
+            "messages": [{"role": "user", "content": f"{prompt}"}],
+        }
+    )
     headers = {
         "Authorization": f"Bearer {os.environ['OLLAMA_TOKEN']}",
         "Content-Type": "application/json",
@@ -138,17 +151,22 @@ def send_wpp_msg(msg):
     logging.info(f"Sending whatsapp message tagging {last_message_user_num}")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
-    mention_placeholder = f"@{last_message_user_name}" # EX: last_message_user_name=Lucas
+    mention_placeholder = (
+        f"@{last_message_user_name}"  # EX: last_message_user_name=Lucas
+    )
     content_with_mention = f"{mention_placeholder} {msg}"
 
-    payload = json.dumps({
-        "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
-        "messageId": f"{last_prompt_message_id}",
-        "contentType": "string",
-        "content": content_with_mention,
-        "mentions": [last_message_user_num],  # Ex: last_message_user_num=5511999999999@c.us
-    })
-    print(payload)
+    payload = json.dumps(
+        {
+            "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
+            "messageId": f"{last_prompt_message_id}",
+            "contentType": "string",
+            "content": content_with_mention,
+            "mentions": [
+                last_message_user_num
+            ],  # Ex: last_message_user_num=5511999999999@c.us
+        }
+    )
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
     response = requests.request(
