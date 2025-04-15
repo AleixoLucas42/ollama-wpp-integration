@@ -16,10 +16,12 @@ logging.basicConfig(
 global last_prompt
 global last_prompt_message_id
 global last_message_from
+global last_message_user
 
 last_prompt_message_id = ""
 last_prompt = ""
 last_message_from = ""
+last_message_user = ""
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
@@ -39,6 +41,7 @@ def check_messages():
     global last_prompt
     global last_prompt_message_id
     global last_message_from
+    global last_message_user
 
     logging.info("Looking for new prompt")
     url = f"{os.environ['WHATSAPP_URL']}/chat/fetchMessages/{os.environ['WHATSAPP_SESSION']}"
@@ -57,6 +60,7 @@ def check_messages():
         last_prompt_message_id = data["messages"][-1]["id"]["id"]
         last_message = data["messages"][-1]["body"]
         last_message_from = data["messages"][-1]["from"]
+        last_message_user = data['messages'][0]['_data']['id']['author']['_serialized']
         if (
             last_message == last_prompt
             or last_message_from == os.environ["WHATSAPP_NUMBER_ID"]
@@ -119,9 +123,9 @@ def send_typing_state():
 
 
 def send_wpp_msg(msg):
-    global last_message_from
+    global last_message_user
 
-    logging.info(f"Sending whatsapp message tagging {last_message_from}")
+    logging.info(f"Sending whatsapp message tagging {last_message_user}")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
     # Adiciona o @user simbólico na frente da mensagem
@@ -133,7 +137,7 @@ def send_wpp_msg(msg):
         "messageId": f"{last_prompt_message_id}",
         "contentType": "string",
         "content": content_with_mention,
-        "mentions": [last_message_from],  # Ex: "5511999999999@c.us"
+        "mentions": [last_message_user],  # Ex: "5511999999999@c.us"
     })
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
