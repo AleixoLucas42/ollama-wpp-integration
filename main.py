@@ -6,9 +6,7 @@ import json
 import os
 import logging
 import sys
-import time
 import threading
-
 
 logging.basicConfig(
     level=f"{os.getenv('LOG_LEVEL', 'INFO')}",
@@ -17,8 +15,11 @@ logging.basicConfig(
 
 global last_prompt
 global last_prompt_message_id
+global last_message_from
+
 last_prompt_message_id = ""
 last_prompt = ""
+last_message_from = ""
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
@@ -37,14 +38,13 @@ def spinner_loading(message, stop_event):
 def check_messages():
     global last_prompt
     global last_prompt_message_id
+    global last_message_from
 
     logging.info("Looking for new prompt")
     url = f"{os.environ['WHATSAPP_URL']}/chat/fetchMessages/{os.environ['WHATSAPP_SESSION']}"
-    payload = json.dumps(
-        {
-            "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
-        }
-    )
+    payload = json.dumps({
+        "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
+    })
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
     response = requests.request(
@@ -84,12 +84,10 @@ def ask_ollama(prompt):
     spinner_thread.start()
     url = f"{os.environ['OLLAMA_URL']}/api/chat/completions"
 
-    payload = json.dumps(
-        {
-            "model": f"{os.environ['OLLAMA_MODEL']}",
-            "messages": [{"role": "user", "content": f"{prompt}"}],
-        }
-    )
+    payload = json.dumps({
+        "model": f"{os.environ['OLLAMA_MODEL']}",
+        "messages": [{"role": "user", "content": f"{prompt}"}],
+    })
     headers = {
         "Authorization": f"Bearer {os.environ['OLLAMA_TOKEN']}",
         "Content-Type": "application/json",
@@ -120,17 +118,18 @@ def send_typing_state():
 
 
 def send_wpp_msg(msg):
+    global last_message_from
+
     logging.info("Sending whatsapp message")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
-    payload = json.dumps(
-        {
-            "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
-            "messageId": f"{last_prompt_message_id}",
-            "contentType": "string",
-            "content": f"{msg}",
-        }
-    )
+    payload = json.dumps({
+        "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
+        "messageId": f"{last_prompt_message_id}",
+        "contentType": "string",
+        "content": f"{msg}",
+        "mentions": [last_message_from],
+    })
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
     response = requests.request(
