@@ -121,19 +121,24 @@ def send_typing_state():
 def send_wpp_msg(msg):
     global last_message_from
 
-    logging.info(f"Sending whatsapp message tagging {last_message_from}")
+    # Verificando se o número está na lista de contatos
+    user_name = contacts.get(last_message_from, "Usuário Desconhecido")  # Valor padrão se não encontrar o número
+
+    logging.info(f"Sending whatsapp message tagging {user_name}")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
-    # Adiciona o @user simbólico na frente da mensagem
-    mention_placeholder = "@user"
+    # Formato de menção no WhatsApp
+    mention_placeholder = f"@{user_name}"  # Usando o nome do usuário como placeholder
     content_with_mention = f"{mention_placeholder} {msg}"
 
+    # A menção precisa ser o ID completo do usuário, por exemplo, '5511999999999@c.us'
+    # Adicionando o número de telefone completo no campo 'mentions'
     payload = json.dumps({
         "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
         "messageId": f"{last_prompt_message_id}",
         "contentType": "string",
         "content": content_with_mention,
-        "mentions": [last_message_from],  # Ex: "5511999999999@c.us"
+        "mentions": [last_message_from],  # Isso é o identificador do número, ex: '5511999999999@c.us'
     })
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
