@@ -124,12 +124,16 @@ def send_wpp_msg(msg):
     logging.info(f"Sending whatsapp message tagging {last_message_from}")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
+    # Adiciona o @user simbólico na frente da mensagem
+    mention_placeholder = "@user"
+    content_with_mention = f"{mention_placeholder} {msg}"
+
     payload = json.dumps({
         "chatId": f"{os.environ['WHATSAPP_CHAT_ID']}",
         "messageId": f"{last_prompt_message_id}",
         "contentType": "string",
-        "content": f"{msg}",
-        "mentions": [last_message_from],
+        "content": content_with_mention,
+        "mentions": [last_message_from],  # Ex: "5511999999999@c.us"
     })
     headers = {"accept": "*/*", "Content-Type": "application/json"}
 
