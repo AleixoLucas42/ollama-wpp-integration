@@ -152,7 +152,7 @@ def send_wpp_msg(msg):
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
     mention_placeholder = (
-        f"@{last_message_user_name}"  # EX: last_message_user_name=Lucas
+        f"@{last_message_user_num[:-5]}"  # EX: last_message_user_name=Lucas
     )
     content_with_mention = f"{mention_placeholder} {msg}"
 
