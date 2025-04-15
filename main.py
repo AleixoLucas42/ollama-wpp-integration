@@ -60,7 +60,7 @@ def check_messages():
         last_prompt_message_id = data["messages"][-1]["id"]["id"]
         last_message = data["messages"][-1]["body"]
         last_message_from = data["messages"][-1]["from"]
-        last_message_user = data['messages'][0]['_data']['id']['author']['_serialized']
+        last_message_user = data['messages'][0]['_data']['id'].get('author', {}).get('_serialized', None)
         if (
             last_message == last_prompt
             or last_message_from == os.environ["WHATSAPP_NUMBER_ID"]
