@@ -64,6 +64,7 @@ def check_messages():
             logging.info("No new prompts")
         else:
             logging.info(f"Prompt: {last_message}")
+            logging.info(f"Requester: {last_message_from}")
             send_typing_state()
             ask_ollama(last_message)
             last_prompt = last_message
@@ -120,7 +121,7 @@ def send_typing_state():
 def send_wpp_msg(msg):
     global last_message_from
 
-    logging.info("Sending whatsapp message")
+    logging.info(f"Sending whatsapp message tagging {last_message_from}")
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
     payload = json.dumps({
