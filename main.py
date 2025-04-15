@@ -152,7 +152,7 @@ def send_wpp_msg(msg):
     url = f"{os.environ['WHATSAPP_URL']}/message/reply/{os.environ['WHATSAPP_SESSION']}"
 
     mention_placeholder = (
-        f"@{last_message_user_num[:-5]}"  # EX: last_message_user_name=Lucas
+        f"@{last_message_user_num[:-5]}"
     )
     content_with_mention = f"{mention_placeholder} {msg}"
 
@@ -162,9 +162,11 @@ def send_wpp_msg(msg):
             "messageId": f"{last_prompt_message_id}",
             "contentType": "string",
             "content": content_with_mention,
-            "mentions": [
-                last_message_user_num
-            ],  # Ex: last_message_user_num=5511999999999@c.us
+            "options": {
+                "mentions": [
+                    last_message_user_num
+                ]
+            },
         }
     )
     headers = {"accept": "*/*", "Content-Type": "application/json"}
